@@ -1,0 +1,49 @@
+{
+  "compilerOptions": {
+    /* ===== 기본 컴파일러 설정 ===== */
+    "target": "ES2022",
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
+    "jsx": "react-jsx",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "allowJs": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "incremental": true,
+    /* ===== 경로 별칭 (@ → 프로젝트 루트) ===== */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./*"
+      ]
+    },
+    /* ===== Next.js TS 플러그인 ===== */
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
+    /* 선택: 타입 엄격 모드 원하시면 아래 주석 해제
+    ,"strict": true
+    */,
+    "strict": false
+  },
+  /* ===== Next.js 기본 include / exclude ===== */
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
