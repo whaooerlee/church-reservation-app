@@ -7,31 +7,37 @@ import { useRouter, useSearchParams } from 'next/navigation';
 export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-
-  // Vercel에 넣어둔 값이 있으면 이걸로 검사하고,
-  // 없으면 임시로 어떤 비번이든 통과시키게 해둡니다.
-  const ADMIN_PASS = process.env.NEXT_PUBLIC_ADMIN_PASS || '';
-
   const [password, setPassword] = useState('');
   const [error, setError] = useState(
     searchParams.get('error') === '1' ? '잘못된 접근입니다.' : ''
   );
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
 
-    // 1) 환경변수가 있는 경우 → 그걸로 체크
-    if (ADMIN_PASS) {
-      if (password === ADMIN_PASS) {
-        router.push('/admin');
-      } else {
-        setError('비밀번호가 올바르지 않습니다.');
+      const json = await res.json();
+
+      if (!res.ok || !json.ok) {
+        setError(json.message || '로그인에 실패했습니다.');
+        return;
       }
-      return;
-    }
 
-    // 2) 환경변수가 없는 경우 → 일단 통과 (Vercel env 안 들어갔을 때)
-    router.push('/admin');
+      // 성공하면 관리자 페이지로
+      router.push('/admin');
+    } catch (err) {
+      setError('서버와 통신 중 문제가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -97,24 +103,20 @@ export default function LoginForm() {
           )}
           <button
             type="submit"
+            disabled={loading}
             style={{
-              background: '#a3272f',
+              background: loading ? '#c43b42' : '#a3272f',
               color: '#fff',
               border: 'none',
               borderRadius: 10,
               padding: '8px 10px',
               fontWeight: 600,
-              cursor: 'pointer',
+              cursor: loading ? 'not-allowed' : 'pointer',
             }}
           >
-            로그인
+            {loading ? '확인 중...' : '로그인'}
           </button>
         </form>
-        <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 12 }}>
-          {ADMIN_PASS
-            ? '환경변수에 설정된 비밀번호로만 진입 가능합니다.'
-            : '⚠ Vercel 환경변수가 없어서 임시로 통과시키고 있습니다.'}
-        </p>
       </div>
     </div>
   );
