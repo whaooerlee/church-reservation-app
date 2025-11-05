@@ -17,16 +17,22 @@ export default function LoginForm() {
 
     // 환경변수에 넣어둔 관리자 비번과 비교
     const adminPass = process.env.NEXT_PUBLIC_ADMIN_PASS;
+
+    
     if (!adminPass) {
       setError('관리자 비밀번호가 설정되지 않았습니다.');
       return;
     }
 
-    if (password === adminPass) {
+    if (adminPass && password === adminPass) {
+      router.push('/admin');
+    } else if (!adminPass) {
+      // 서버에 비번이 없으면 그냥 통과시켜버리기 (임시)
       router.push('/admin');
     } else {
       setError('비밀번호가 올바르지 않습니다.');
     }
+
   };
 
   return (
