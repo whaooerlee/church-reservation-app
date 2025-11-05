@@ -1,38 +1,37 @@
 // app/admin/login/LoginForm.tsx
 'use client';
 
-import { useSearchParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function LoginForm() {
-  const searchParams = useSearchParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Vercel에 넣어둔 값이 있으면 이걸로 검사하고,
+  // 없으면 임시로 어떤 비번이든 통과시키게 해둡니다.
+  const ADMIN_PASS = process.env.NEXT_PUBLIC_ADMIN_PASS || '';
+
   const [password, setPassword] = useState('');
   const [error, setError] = useState(
     searchParams.get('error') === '1' ? '잘못된 접근입니다.' : ''
   );
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 환경변수에 넣어둔 관리자 비번과 비교
-    const adminPass = process.env.NEXT_PUBLIC_ADMIN_PASS;
-
-    
-    if (!adminPass) {
-      setError('관리자 비밀번호가 설정되지 않았습니다.');
+    // 1) 환경변수가 있는 경우 → 그걸로 체크
+    if (ADMIN_PASS) {
+      if (password === ADMIN_PASS) {
+        router.push('/admin');
+      } else {
+        setError('비밀번호가 올바르지 않습니다.');
+      }
       return;
     }
 
-    if (adminPass && password === adminPass) {
-      router.push('/admin');
-    } else if (!adminPass) {
-      // 서버에 비번이 없으면 그냥 통과시켜버리기 (임시)
-      router.push('/admin');
-    } else {
-      setError('비밀번호가 올바르지 않습니다.');
-    }
-
+    // 2) 환경변수가 없는 경우 → 일단 통과 (Vercel env 안 들어갔을 때)
+    router.push('/admin');
   };
 
   return (
@@ -111,6 +110,11 @@ export default function LoginForm() {
             로그인
           </button>
         </form>
+        <p style={{ fontSize: 11, color: '#94a3b8', marginTop: 12 }}>
+          {ADMIN_PASS
+            ? '환경변수에 설정된 비밀번호로만 진입 가능합니다.'
+            : '⚠ Vercel 환경변수가 없어서 임시로 통과시키고 있습니다.'}
+        </p>
       </div>
     </div>
   );
