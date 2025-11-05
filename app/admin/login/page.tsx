@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function AdminLoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [debug, setDebug] = useState('');
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,7 +23,6 @@ export default function AdminLoginPage() {
         body: JSON.stringify({ password }),
       });
 
-      // 우선 서버가 뭐라고 보냈는지 “그대로” 문자열로 받음
       const text = await res.text();
       setDebug(`status: ${res.status}\nbody: ${text}`);
 
@@ -29,26 +30,23 @@ export default function AdminLoginPage() {
       try {
         json = text ? JSON.parse(text) : null;
       } catch {
-        // JSON이 아니면 그냥 둠
+        // JSON이 아닐 경우 무시
       }
 
-      // 1) 요청 자체가 404 / 500 같은 경우
       if (!res.ok) {
         setError(json?.message || `로그인 실패 (HTTP ${res.status})`);
         return;
       }
 
-      // 2) JSON은 받았는데 ok가 아닌 경우
       if (json && json.ok) {
-        // 성공!
-        window.location.href = '/admin';
+        // ✅ 로그인 성공 → 관리자 페이지로 이동
+        router.push('/admin');
         return;
       } else if (json && json.message) {
         setError(json.message);
         return;
       }
 
-      // 3) 예상 못한 응답
       setError('서버 응답을 해석할 수 없습니다.');
     } catch (err: any) {
       console.error(err);
