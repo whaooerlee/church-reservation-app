@@ -1,25 +1,32 @@
 // app/api/admin-login/route.ts
 import { NextResponse } from 'next/server';
 
-export async function POST(req: Request) {
-  const { password } = await req.json().catch(() => ({ password: '' }));
+export const dynamic = 'force-dynamic'; // Vercel에서 캐싱 막기
 
-  // 여기서 가능한 이름은 전부 체크합니다.
+export async function POST(req: Request) {
+  const body = await req.json().catch(() => ({ password: '' }));
+  const inputPass = body.password ?? '';
+
+  // 환경변수 여러 이름 모두 시도
   const realPass =
-    process.env.ADMIN_PASS ||              // 우리가 처음에 쓴 이름
-    process.env.ADMIN_PASSWORD ||          // 지금 입력하신 이름
-    process.env.NEXT_PUBLIC_ADMIN_PASS ||  // 프론트에도 노출되는 이름
+    process.env.ADMIN_PASS ||
+    process.env.ADMIN_PASSWORD ||
+    process.env.NEXT_PUBLIC_ADMIN_PASS ||
     '';
 
-  // 비번이 아예 서버에 없으면 일단 통과 (테스트용)
+  // 디버그용 로그 (Vercel build logs → Function logs 에서 보임)
+  console.log('[admin-login] input:', inputPass);
+  console.log('[admin-login] realPass exists:', !!realPass);
+
+  // 비밀번호가 아예 설정 안 되어 있으면 통과 (개발/테스트)
   if (!realPass) {
     return NextResponse.json(
-      { ok: true, message: 'no admin password set (dev mode)' },
+      { ok: true, mode: 'no-password' },
       { status: 200 }
     );
   }
 
-  if (password === realPass) {
+  if (inputPass === realPass) {
     return NextResponse.json({ ok: true }, { status: 200 });
   }
 
