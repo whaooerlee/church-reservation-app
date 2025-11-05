@@ -30,7 +30,7 @@ export default function AdminLoginPage() {
       try {
         json = text ? JSON.parse(text) : null;
       } catch {
-        // JSON이 아닐 경우 무시
+        /* ignore */
       }
 
       if (!res.ok) {
@@ -38,12 +38,18 @@ export default function AdminLoginPage() {
         return;
       }
 
+      // ✅ 여기까지 왔으면 성공
       if (json && json.ok) {
-        // ✅ 로그인 성공 → 관리자 페이지로 이동
-        router.push('/admin');
-        return;
-      } else if (json && json.message) {
-        setError(json.message);
+        // 1) next/navigation
+        try {
+          router.push('/admin');
+        } catch {
+          /* 무시 */
+        }
+        // 2) 그래도 안 가면 브라우저 강제 이동
+        if (typeof window !== 'undefined') {
+          window.location.href = '/admin';
+        }
         return;
       }
 
@@ -132,7 +138,6 @@ export default function AdminLoginPage() {
           {loading ? '확인중…' : '로그인'}
         </button>
 
-        {/* 디버그 출력 */}
         {debug && (
           <pre
             style={{
