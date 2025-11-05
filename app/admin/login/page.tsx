@@ -1,4 +1,3 @@
-// app/admin/login/page.tsx
 'use client';
 
 import { useState } from 'react';
@@ -6,12 +5,15 @@ import { useState } from 'react';
 export default function AdminLoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [debug, setDebug] = useState('');
   const [loading, setLoading] = useState(false);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setDebug('');
     setLoading(true);
+
     try {
       const res = await fetch('/api/admin-login', {
         method: 'POST',
@@ -19,25 +21,39 @@ export default function AdminLoginPage() {
         body: JSON.stringify({ password }),
       });
 
-      const json = await res.json().catch(() => null);
-      console.log('admin-login response', json);
+      // 우선 서버가 뭐라고 보냈는지 “그대로” 문자열로 받음
+      const text = await res.text();
+      setDebug(`status: ${res.status}\nbody: ${text}`);
 
-      if (!json) {
-        setError('서버에서 올바른 응답을 받지 못했습니다.');
+      let json: any = null;
+      try {
+        json = text ? JSON.parse(text) : null;
+      } catch {
+        // JSON이 아니면 그냥 둠
+      }
+
+      // 1) 요청 자체가 404 / 500 같은 경우
+      if (!res.ok) {
+        setError(json?.message || `로그인 실패 (HTTP ${res.status})`);
         return;
       }
 
-      if (json.ok) {
-        // 로그인 성공
+      // 2) JSON은 받았는데 ok가 아닌 경우
+      if (json && json.ok) {
+        // 성공!
         window.location.href = '/admin';
         return;
+      } else if (json && json.message) {
+        setError(json.message);
+        return;
       }
 
-      // 서버가 ok:false 보낸 경우
-      setError(json.message || '로그인에 실패했습니다.');
-    } catch (err) {
+      // 3) 예상 못한 응답
+      setError('서버 응답을 해석할 수 없습니다.');
+    } catch (err: any) {
       console.error(err);
-      setError('통신 오류가 발생했습니다.');
+      setError('요청 중 오류가 발생했습니다.');
+      setDebug(String(err));
     } finally {
       setLoading(false);
     }
@@ -73,6 +89,7 @@ export default function AdminLoginPage() {
         <p style={{ fontSize: 13, color: '#64748b' }}>
           관리자 비밀번호를 입력해 주세요.
         </p>
+
         <input
           type="password"
           value={password}
@@ -86,6 +103,7 @@ export default function AdminLoginPage() {
             outline: 'none',
           }}
         />
+
         {error && (
           <div
             style={{
@@ -99,6 +117,7 @@ export default function AdminLoginPage() {
             {error}
           </div>
         )}
+
         <button
           type="submit"
           disabled={loading}
@@ -114,6 +133,23 @@ export default function AdminLoginPage() {
         >
           {loading ? '확인중…' : '로그인'}
         </button>
+
+        {/* 디버그 출력 */}
+        {debug && (
+          <pre
+            style={{
+              background: '#0f172a',
+              color: '#e2e8f0',
+              fontSize: 11,
+              padding: '8px 10px',
+              borderRadius: 8,
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-all',
+            }}
+          >
+            {debug}
+          </pre>
+        )}
       </form>
     </div>
   );
