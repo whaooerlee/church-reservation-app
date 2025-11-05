@@ -2,7 +2,6 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
-// 빌드 때 정적으로 굳이 분석하지 말라고
 export const dynamic = 'force-dynamic';
 
 // ✅ 예약 한 건 조회
@@ -28,7 +27,7 @@ export async function GET(_req, context) {
   return NextResponse.json(data);
 }
 
-// ✅ 승인 (status → approved)
+// ✅ 승인
 export async function PATCH(_req, context) {
   const id = context?.params?.id;
   if (!id) {
