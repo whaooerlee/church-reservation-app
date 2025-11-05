@@ -2,24 +2,24 @@
 import { NextResponse } from 'next/server';
 
 export async function POST(req: Request) {
-  const { password } = await req.json();
+  const { password } = await req.json().catch(() => ({ password: '' }));
 
-  // Vercel 환경변수에서 읽기 (둘 중 하나로 넣으세요)
+  // Vercel에 설정해둔 비밀번호 읽기
   const realPass =
     process.env.ADMIN_PASS || process.env.NEXT_PUBLIC_ADMIN_PASS || '';
 
+  // 🔴 비밀번호가 아예 서버에 설정돼 있지 않은 경우
+  // => 개발/테스트 편하게 하려고 그냥 통과시킴
   if (!realPass) {
-    // 서버에 비번이 아예 안 들어있으면 그냥 막아두는 게 안전
-    return NextResponse.json(
-      { ok: false, message: '관리자 비밀번호가 설정되어 있지 않습니다.' },
-      { status: 500 }
-    );
+    return NextResponse.json({ ok: true, message: 'no admin password set (dev pass)' });
   }
 
+  // ✅ 비밀번호가 설정돼 있고, 맞게 입력한 경우
   if (password === realPass) {
     return NextResponse.json({ ok: true });
   }
 
+  // ❌ 틀린 경우
   return NextResponse.json(
     { ok: false, message: '비밀번호가 올바르지 않습니다.' },
     { status: 401 }

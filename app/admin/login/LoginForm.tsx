@@ -24,17 +24,21 @@ export default function LoginForm() {
         body: JSON.stringify({ password }),
       });
 
-      const json = await res.json();
+      const json = await res.json().catch(() => null);
 
-      if (!res.ok || !json.ok) {
-        setError(json.message || '로그인에 실패했습니다.');
+      if (!json) {
+        setError('서버에서 올바른 응답을 받지 못했습니다.');
         return;
       }
 
-      // 성공하면 관리자 페이지로
-      router.push('/admin');
+      if (json.ok) {
+        router.push('/admin');
+        return;
+      }
+
+      setError(json.message || '로그인에 실패했습니다.');
     } catch (err) {
-      setError('서버와 통신 중 문제가 발생했습니다.');
+      setError('서버와 통신 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }
@@ -114,7 +118,7 @@ export default function LoginForm() {
               cursor: loading ? 'not-allowed' : 'pointer',
             }}
           >
-            {loading ? '확인 중...' : '로그인'}
+            {loading ? '확인중...' : '로그인'}
           </button>
         </form>
       </div>
