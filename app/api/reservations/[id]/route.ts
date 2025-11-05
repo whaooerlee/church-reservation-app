@@ -1,16 +1,12 @@
-// app/api/reservations/[id]/route.ts
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
-type RouteParams = {
-  params: {
-    id: string;
-  };
-};
+// Vercel에서 정적 분석 안 꼬이게 강제로 동적 처리
+export const dynamic = 'force-dynamic';
 
 // ✅ 단건 조회
-export async function GET(_req: Request, { params }: RouteParams) {
-  const { id } = params;
+export async function GET(_req: Request, context: any) {
+  const id = context?.params?.id as string;
   if (!id) {
     return NextResponse.json({ error: 'id required' }, { status: 400 });
   }
@@ -31,9 +27,9 @@ export async function GET(_req: Request, { params }: RouteParams) {
   return NextResponse.json(data);
 }
 
-// ✅ 승인 (status → approved)
-export async function PATCH(_req: Request, { params }: RouteParams) {
-  const { id } = params;
+// ✅ 승인 (status -> approved)
+export async function PATCH(_req: Request, context: any) {
+  const id = context?.params?.id as string;
   if (!id) {
     return NextResponse.json({ error: 'id required' }, { status: 400 });
   }
@@ -56,8 +52,8 @@ export async function PATCH(_req: Request, { params }: RouteParams) {
 }
 
 // ✅ 삭제
-export async function DELETE(_req: Request, { params }: RouteParams) {
-  const { id } = params;
+export async function DELETE(_req: Request, context: any) {
+  const id = context?.params?.id as string;
   if (!id) {
     return NextResponse.json({ error: 'id required' }, { status: 400 });
   }
