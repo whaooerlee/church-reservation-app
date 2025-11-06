@@ -18,25 +18,31 @@ export default function AdminLoginPage() {
       const res = await fetch('/api/admin-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // ✅ 쿠키를 받으려면 이게 필수입니다
-        credentials: 'include',
+        credentials: 'include', // ✅ 쿠키 받기
         body: JSON.stringify({ password }),
       });
 
-      const json = await res.json().catch(() => ({}));
+      const text = await res.text(); // 응답이 비어있어도 일단 문자열로
+      let json: any = {};
+      try {
+        json = text ? JSON.parse(text) : {};
+      } catch {
+        json = {};
+      }
 
-      if (!res.ok || !json?.ok) {
+      if (!res.ok || !json.ok) {
         setErrorMsg(json?.message || '로그인에 실패했습니다.');
-        setLoading(false);
         return;
       }
 
-      // ✅ 로그인 성공했으니 관리자 페이지로 이동
+      // ✅ 로그인 성공 → 관리자 페이지로
       router.push('/admin');
-      // 혹시나 해서 강제 새로고침
       router.refresh();
     } catch (err) {
-      setErrorMsg('네트워크 오류가 발생했습니다.');
+      console.error('login error', err);
+      setErrorMsg('서버와 통신 중 문제가 생겼습니다.');
+    } finally {
+      // ✅ 어떤 경우에도 버튼은 원래대로
       setLoading(false);
     }
   }

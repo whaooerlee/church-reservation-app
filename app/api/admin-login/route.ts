@@ -1,3 +1,4 @@
+/*
 // app/api/admin-login/route.ts
 import { NextResponse } from 'next/server';
 
@@ -29,3 +30,29 @@ export async function POST(req: Request) {
 
   return res;
 }
+
+*/
+
+// app/api/admin-login/route.ts
+import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+
+export async function POST(req: Request) {
+  const { password } = await req.json().catch(() => ({ password: '' }));
+
+  const adminPass = process.env.ADMIN_PASSWORD || process.env.NEXT_PUBLIC_ADMIN_PASS;
+
+  if (!adminPass || password !== adminPass) {
+    return NextResponse.json({ ok: false, message: '비밀번호가 맞지 않습니다.' }, { status: 401 });
+  }
+
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set('admin_auth', '1', {
+    httpOnly: false, // 로컬/테스트라면 false
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 60 * 8, // 8시간
+  });
+  return res;
+}
+
