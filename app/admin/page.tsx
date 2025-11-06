@@ -8,57 +8,32 @@ export default function AdminPage() {
       style={{
         minHeight: '100vh',
         background: '#f8fafc',
-        padding: 20,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 20,
       }}
     >
-      <header
+      <h1 style={{ fontSize: 24, fontWeight: 700 }}>
+        ✅ 관리자 페이지 접속 성공
+      </h1>
+      <p style={{ fontSize: 16, color: '#334155' }}>
+        이 화면이 보이면 로그인 문제는 “쿠키 체크 로직”에 있습니다.
+      </p>
+      <Link
+        href="/"
         style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: 16,
+          background: '#a3272f',
+          color: '#fff',
+          padding: '8px 14px',
+          borderRadius: 8,
+          textDecoration: 'none',
+          fontWeight: 500,
         }}
       >
-        <div>
-          <h1 style={{ fontSize: 24, fontWeight: 600, marginBottom: 4 }}>
-            세종교육관 예약관리
-          </h1>
-          <p style={{ color: '#64748b' }}>
-            여기서 승인·취소·삭제를 하시면 됩니다.
-          </p>
-        </div>
-        <Link
-          href="/"
-          style={{
-            background: '#fff',
-            border: '1px solid #e2e8f0',
-            borderRadius: 8,
-            padding: '6px 12px',
-            textDecoration: 'none',
-            color: '#0f172a',
-          }}
-        >
-          ← 메인으로
-        </Link>
-      </header>
-
-      {/* 여기 아래에 예전에 쓰시던 관리자 달력 컴포넌트 붙이시면 됩니다 */}
-      <div
-        style={{
-          background: '#fff',
-          border: '1px solid #e2e8f0',
-          borderRadius: 14,
-          padding: 16,
-        }}
-      >
-        <p style={{ marginBottom: 8, color: '#475569' }}>
-          지금은 로그인 체크를 잠시 꺼둔 상태입니다.
-        </p>
-        <p style={{ marginBottom: 0 }}>
-          여기다가 기존 <code>FullCalendar</code> 쓰던 관리자 페이지 코드를
-          다시 넣어주세요.
-        </p>
-      </div>
+        메인으로 돌아가기
+      </Link>
     </div>
   );
 }
