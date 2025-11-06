@@ -1,37 +1,31 @@
 // app/api/admin-login/route.ts
 import { NextResponse } from 'next/server';
 
-export const dynamic = 'force-dynamic'; // Vercel에서 캐싱 막기
-
 export async function POST(req: Request) {
-  const body = await req.json().catch(() => ({ password: '' }));
-  const inputPass = body.password ?? '';
+  const { password } = await req.json();
 
-  // 환경변수 여러 이름 모두 시도
-  const realPass =
-    process.env.ADMIN_PASS ||
-    process.env.ADMIN_PASSWORD ||
-    process.env.NEXT_PUBLIC_ADMIN_PASS ||
-    '';
+  const ok =
+    password === process.env.ADMIN_PASSWORD ||
+    password === process.env.NEXT_PUBLIC_ADMIN_PASS;
 
-  // 디버그용 로그 (Vercel build logs → Function logs 에서 보임)
-  console.log('[admin-login] input:', inputPass);
-  console.log('[admin-login] realPass exists:', !!realPass);
-
-  // 비밀번호가 아예 설정 안 되어 있으면 통과 (개발/테스트)
-  if (!realPass) {
+  if (!ok) {
     return NextResponse.json(
-      { ok: true, mode: 'no-password' },
-      { status: 200 }
+      { ok: false, message: '비밀번호가 올바르지 않습니다.' },
+      { status: 401 }
     );
   }
 
-  if (inputPass === realPass) {
-    return NextResponse.json({ ok: true }, { status: 200 });
-  }
+  // ✅ 여기서 쿠키 심어주기
+  const res = NextResponse.json({ ok: true });
 
-  return NextResponse.json(
-    { ok: false, message: '비밀번호가 올바르지 않습니다.' },
-    { status: 401 }
-  );
+  res.cookies.set('admin_auth', '1', {
+    httpOnly: true,
+    sameSite: 'lax',
+    // 로컬(localhost)에서는 secure 쓰면 브라우저가 버립니다
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge: 60 * 60 * 8, // 8시간
+  });
+
+  return res;
 }
