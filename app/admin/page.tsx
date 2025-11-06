@@ -5,17 +5,17 @@ import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
-export default function AdminPage() {
-  // ✅ 동기입니다. await 쓰지 마세요.
-  const cookieStore = cookies();
-  const auth = cookieStore.get('admin_auth');
+export default async function AdminPage() {
+  // Next 16: cookies()가 Promise로 되어 있어서 한 번 기다리고 any로 잡아줍니다.
+  const cookieStore = (await cookies()) as any;
+  const auth = cookieStore.get ? cookieStore.get('admin_auth') : null;
 
-  // 쿠키 없으면 바로 로그인 페이지로 보냄
+  // 쿠키 없으면 로그인 페이지로 바로 보내기
   if (!auth) {
-    return redirect('/admin/login');
+    redirect('/admin/login');
   }
 
-  // ✅ 여기부터가 실제 관리자 화면
+  // ✅ 여기부터 실제 관리자 화면
   return (
     <div style={{ padding: 24, minHeight: '100vh', background: '#f8fafc' }}>
       <h1 style={{ fontSize: 24, fontWeight: 600, marginBottom: 16 }}>
