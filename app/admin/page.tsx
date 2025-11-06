@@ -5,10 +5,10 @@ import Link from 'next/link';
 export const dynamic = 'force-dynamic';
 
 export default async function AdminPage() {
-  const cookieStore = cookies();
+  // ✅ Next 16에서는 이렇게 await 해줘야 합니다
+  const cookieStore = await cookies();
   const auth = cookieStore.get('admin_auth');
 
-  // 쿠키 없으면 로그인으로
   if (!auth) {
     return (
       <div
@@ -49,21 +49,18 @@ export default async function AdminPage() {
     );
   }
 
-  // ✅ 여기부터가 진짜 관리자 화면
+  // ✅ 여기에 원래 쓰시던 관리자 캘린더 페이지 내용 넣으시면 됩니다
   return (
     <div style={{ padding: 24 }}>
       <h1 style={{ fontSize: 24, fontWeight: 600, marginBottom: 16 }}>
         관리자 화면
       </h1>
       <p style={{ marginBottom: 12 }}>
-        여기서 캘린더 + 승인/삭제 하는 기존 그 화면을 렌더링하면 됩니다.
+        로그인 쿠키가 확인돼서 이 화면이 보입니다.
       </p>
       <Link
         href="/"
-        style={{
-          color: '#0f172a',
-          textDecoration: 'underline',
-        }}
+        style={{ color: '#0f172a', textDecoration: 'underline' }}
       >
         메인으로
       </Link>
