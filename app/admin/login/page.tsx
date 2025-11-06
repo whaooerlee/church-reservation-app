@@ -4,64 +4,42 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function AdminLoginPage() {
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [debug, setDebug] = useState('');
-  const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const onSubmit = async (e: React.FormEvent) => {
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    setError('');
-    setDebug('');
     setLoading(true);
+    setErrorMsg('');
 
     try {
       const res = await fetch('/api/admin-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        // ✅ 쿠키를 받으려면 이게 필수입니다
+        credentials: 'include',
         body: JSON.stringify({ password }),
       });
 
-      const text = await res.text();
-      setDebug(`status: ${res.status}\nbody: ${text}`);
+      const json = await res.json().catch(() => ({}));
 
-      let json: any = null;
-      try {
-        json = text ? JSON.parse(text) : null;
-      } catch {
-        /* ignore */
-      }
-
-      if (!res.ok) {
-        setError(json?.message || `로그인 실패 (HTTP ${res.status})`);
+      if (!res.ok || !json?.ok) {
+        setErrorMsg(json?.message || '로그인에 실패했습니다.');
+        setLoading(false);
         return;
       }
 
-      // ✅ 여기까지 왔으면 성공
-      if (json && json.ok) {
-        // 1) next/navigation
-        try {
-          router.push('/admin');
-        } catch {
-          /* 무시 */
-        }
-        // 2) 그래도 안 가면 브라우저 강제 이동
-        if (typeof window !== 'undefined') {
-          window.location.href = '/admin';
-        }
-        return;
-      }
-
-      setError('서버 응답을 해석할 수 없습니다.');
-    } catch (err: any) {
-      console.error(err);
-      setError('요청 중 오류가 발생했습니다.');
-      setDebug(String(err));
-    } finally {
+      // ✅ 로그인 성공했으니 관리자 페이지로 이동
+      router.push('/admin');
+      // 혹시나 해서 강제 새로고침
+      router.refresh();
+    } catch (err) {
+      setErrorMsg('네트워크 오류가 발생했습니다.');
       setLoading(false);
     }
-  };
+  }
 
   return (
     <div
@@ -69,28 +47,27 @@ export default function AdminLoginPage() {
         minHeight: '100vh',
         background: '#f8fafc',
         display: 'flex',
-        justifyContent: 'center',
         alignItems: 'center',
+        justifyContent: 'center',
         padding: 16,
       }}
     >
       <form
-        onSubmit={onSubmit}
+        onSubmit={handleLogin}
         style={{
+          width: '100%',
+          maxWidth: 420,
           background: '#fff',
           border: '1px solid #e2e8f0',
-          borderRadius: 14,
-          padding: '28px 26px',
-          width: '100%',
-          maxWidth: 360,
-          display: 'grid',
-          gap: 12,
+          borderRadius: 16,
+          padding: 24,
+          boxShadow: '0 12px 30px rgba(15, 23, 42, 0.04)',
         }}
       >
-        <h1 style={{ fontSize: 20, fontWeight: 600, marginBottom: 4 }}>
+        <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 14 }}>
           관리자 로그인
         </h1>
-        <p style={{ fontSize: 13, color: '#64748b' }}>
+        <p style={{ fontSize: 14, color: '#5b6b7c', marginBottom: 16 }}>
           관리자 비밀번호를 입력해 주세요.
         </p>
 
@@ -100,59 +77,47 @@ export default function AdminLoginPage() {
           onChange={(e) => setPassword(e.target.value)}
           placeholder="비밀번호"
           style={{
-            border: '1px solid #cbd5e1',
+            width: '100%',
+            border: '1px solid #d1d5db',
             borderRadius: 10,
-            padding: '8px 10px',
-            fontSize: 14,
+            padding: '10px 12px',
             outline: 'none',
+            marginBottom: 14,
           }}
+          required
         />
 
-        {error && (
+        {errorMsg ? (
           <div
             style={{
               background: '#fee2e2',
               color: '#b91c1c',
-              fontSize: 12,
-              padding: '6px 8px',
+              padding: '6px 10px',
               borderRadius: 8,
+              fontSize: 13,
+              marginBottom: 10,
             }}
           >
-            {error}
+            {errorMsg}
           </div>
-        )}
+        ) : null}
 
         <button
           type="submit"
           disabled={loading}
           style={{
-            background: loading ? '#c43b42' : '#a3272f',
-            color: '#fff',
+            width: '100%',
+            background: '#b0232b',
             border: 'none',
+            color: '#fff',
             borderRadius: 10,
-            padding: '8px 10px',
+            padding: '10px 12px',
             fontWeight: 600,
-            cursor: loading ? 'not-allowed' : 'pointer',
+            cursor: loading ? 'default' : 'pointer',
           }}
         >
           {loading ? '확인중…' : '로그인'}
         </button>
-
-        {debug && (
-          <pre
-            style={{
-              background: '#0f172a',
-              color: '#e2e8f0',
-              fontSize: 11,
-              padding: '8px 10px',
-              borderRadius: 8,
-              whiteSpace: 'pre-wrap',
-              wordBreak: 'break-all',
-            }}
-          >
-            {debug}
-          </pre>
-        )}
       </form>
     </div>
   );
