@@ -1,38 +1,3 @@
-/*
-// app/api/admin-login/route.ts
-import { NextResponse } from 'next/server';
-
-export async function POST(req: Request) {
-  const { password } = await req.json();
-
-  const ok =
-    password === process.env.ADMIN_PASSWORD ||
-    password === process.env.NEXT_PUBLIC_ADMIN_PASS;
-
-  if (!ok) {
-    return NextResponse.json(
-      { ok: false, message: '비밀번호가 올바르지 않습니다.' },
-      { status: 401 }
-    );
-  }
-
-  // ✅ 여기서 쿠키 심어주기
-  const res = NextResponse.json({ ok: true });
-
-  res.cookies.set('admin_auth', '1', {
-    httpOnly: true,
-    sameSite: 'lax',
-    // 로컬(localhost)에서는 secure 쓰면 브라우저가 버립니다
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    maxAge: 60 * 60 * 8, // 8시간
-  });
-
-  return res;
-}
-
-*/
-
 // app/api/admin-login/route.ts
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
@@ -40,6 +5,7 @@ import { cookies } from 'next/headers';
 export async function POST(req: Request) {
   const { password } = await req.json().catch(() => ({ password: '' }));
 
+  // .env 에 있는 관리자 비밀번호 확인
   const adminPass = process.env.ADMIN_PASSWORD || process.env.NEXT_PUBLIC_ADMIN_PASS;
 
   if (!adminPass || password !== adminPass) {
@@ -47,12 +13,15 @@ export async function POST(req: Request) {
   }
 
   const res = NextResponse.json({ ok: true });
+
+  // ✅ Vercel 환경에서도 작동하도록 secure + sameSite 세팅
   res.cookies.set('admin_auth', '1', {
-    httpOnly: false, // 로컬/테스트라면 false
-    sameSite: 'lax',
+    httpOnly: false,   // 클라이언트 JS에서 접근 가능
+    sameSite: 'strict',
+    secure: true,      // https 환경에서만
     path: '/',
     maxAge: 60 * 60 * 8, // 8시간
   });
+
   return res;
 }
-

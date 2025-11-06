@@ -18,7 +18,8 @@ export default function AdminLoginPage() {
       const res = await fetch('/api/admin-login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include', // ✅ 쿠키 받기
+        credentials: 'include',     // ✅ 쿠키 교환 허용
+        cache: 'no-store',          // ✅ 캐시 방지
         body: JSON.stringify({ password }),
       });
 
