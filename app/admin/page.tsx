@@ -22,14 +22,13 @@ function hhmm(d: Date | null) {
   return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
-// 안전하게 JSON 받기
 async function safeJson(res: Response) {
   const text = await res.text();
-  if (!res.ok) throw new Error(text || `HTTP ${res.status}`);
+  if (!text) return [];
   try {
-    return text ? JSON.parse(text) : null;
+    return JSON.parse(text);
   } catch {
-    return null;
+    return [];
   }
 }
 
@@ -39,19 +38,25 @@ export default function AdminPage() {
   const [monthTitle, setMonthTitle] = useState('');
   const calendarRef = useRef<any>(null);
 
-  // 목록 불러오기: 우리 API 사용
+  // ✅ 여기만 중요
   const fetchData = async () => {
     try {
-      const [r1, r2] = await Promise.all([
-        fetch('/api/reservations?status=all'),
+      // 기존에 있던 API만 사용합니다.
+      const [approvedRes, pendingRes, spacesRes] = await Promise.all([
+        fetch('/api/reservations?status=approved'),
+        fetch('/api/reservations?status=pending'),
         fetch('/api/spaces'),
       ]);
-      const data1 = await safeJson(r1);
-      const data2 = await safeJson(r2);
-      setReservations(data1 || []);
-      setSpaces(data2 || []);
+
+      const approved = await safeJson(approvedRes);
+      const pending = await safeJson(pendingRes);
+      const spaces = await safeJson(spacesRes);
+
+      // 승인 + 대기 통합
+      setReservations([...(pending || []), ...(approved || [])]);
+      setSpaces(spaces || []);
     } catch (e) {
-      console.error('관리자용 데이터 로드 실패', e);
+      console.error('관리자 데이터 로드 실패', e);
     }
   };
 
@@ -59,68 +64,45 @@ export default function AdminPage() {
     fetchData();
   }, []);
 
-  // ✅ 승인
+  // 승인/취소/삭제는 기존에 만들어둔 API를 호출하는 형태 그대로 둡니다.
   const approveReservation = async (id: string) => {
-    try {
-      const res = await fetch(`/api/reservations/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'approved' }),
-      });
-      if (!res.ok) {
-        const t = await res.text();
-        alert('승인 실패: ' + t);
-        return;
-      }
-      await fetchData();
-    } catch (e) {
-      console.error(e);
-      alert('승인 중 오류가 발생했습니다.');
+    const res = await fetch(`/api/reservations/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'approved' }),
+    });
+    if (!res.ok) {
+      alert('승인 실패');
+      return;
     }
+    fetchData();
   };
 
-  // ✅ 승인 취소
   const cancelApproval = async (id: string) => {
-    try {
-      const res = await fetch(`/api/reservations/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: 'pending' }),
-      });
-      if (!res.ok) {
-        const t = await res.text();
-        alert('승인 취소 실패: ' + t);
-        return;
-      }
-      await fetchData();
-    } catch (e) {
-      console.error(e);
-      alert('승인 취소 중 오류가 발생했습니다.');
+    const res = await fetch(`/api/reservations/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'pending' }),
+    });
+    if (!res.ok) {
+      alert('승인 취소 실패');
+      return;
     }
+    fetchData();
   };
 
-  // ✅ 삭제
   const deleteReservation = async (id: string) => {
-    if (!confirm('정말 이 예약을 삭제하시겠습니까?')) return;
-    try {
-      const res = await fetch(`/api/reservations/${id}`, {
-        method: 'DELETE',
-      });
-      if (!res.ok) {
-        const t = await res.text();
-        alert('삭제 실패: ' + t);
-        return;
-      }
-      await fetchData();
-    } catch (e) {
-      console.error(e);
-      alert('삭제 중 오류가 발생했습니다.');
+    if (!confirm('정말 삭제하시겠습니까?')) return;
+    const res = await fetch(`/api/reservations/${id}`, { method: 'DELETE' });
+    if (!res.ok) {
+      alert('삭제 실패');
+      return;
     }
+    fetchData();
   };
 
   const nameBySpace = new Map(spaces.map((s) => [s.id, s.name]));
 
-  // FullCalendar 이벤트로 변환
   const events = reservations.map((r) => ({
     id: r.id,
     title: r.team_name ? r.team_name : r.title,
@@ -133,7 +115,6 @@ export default function AdminPage() {
     classNames: [r.status === 'approved' ? 'evt-approved' : 'evt-pending'],
   }));
 
-  // 캘린더 셀 안 표시
   const eventContent = (info: any) => {
     const { spaceName, status } = info.event.extendedProps;
     const start = hhmm(info.event.start);
@@ -186,6 +167,8 @@ export default function AdminPage() {
     return { domNodes: [wrap] };
   };
 
+  const calendarRef = useRef<any>(null);
+
   const gotoPrev = () => {
     const api = calendarRef.current?.getApi?.();
     api?.prev();
@@ -225,11 +208,9 @@ export default function AdminPage() {
             ✅ 초록: 승인됨 / 🟡 노랑: 승인대기 — 각 항목에서 승인, 취소, 삭제 가능
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Link href="/" className="btn btn-primary-outline">
-            ← 사용자 화면
-          </Link>
-        </div>
+        <Link href="/" className="btn btn-primary-outline">
+          ← 사용자 화면
+        </Link>
       </header>
 
       <div
@@ -317,17 +298,11 @@ export default function AdminPage() {
           padding: 7px 14px;
           text-decoration: none !important;
           font-weight: 500;
-          transition: background 0.2s ease, transform 0.1s ease, border-color 0.2s ease;
         }
         .btn-primary-outline {
           background: #fff;
           color: var(--brand-primary);
           border: 1px solid var(--brand-primary);
-        }
-        .btn-primary-outline:hover {
-          background: var(--brand-primary);
-          color: #fff;
-          transform: translateY(-1px);
         }
         .nav-btn {
           border: none;
