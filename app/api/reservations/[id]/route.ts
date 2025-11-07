@@ -1,12 +1,13 @@
 // app/api/reservations/[id]/route.ts
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
-type Params = { params: { id: string } };
+// Next 16에서는 params가 Promise로 들어오기 때문에 한 번 await 해서 꺼낸다
+type Ctx = { params: Promise<{ id: string }> };
 
-// PATCH /api/reservations/:id  → { status: 'approved' } 같은 걸로 보냄
-export async function PATCH(req: Request, { params }: Params) {
-  const id = params.id;
+// PATCH /api/reservations/:id  → 승인 / 승인취소
+export async function PATCH(req: NextRequest, context: Ctx) {
+  const { id } = await context.params;
   if (!id) {
     return NextResponse.json({ error: 'id required' }, { status: 400 });
   }
@@ -25,7 +26,7 @@ export async function PATCH(req: Request, { params }: Params) {
     if (error) {
       return NextResponse.json(
         { error: error.message, debug: { id, status } },
-        { status: 409 },
+        { status: 409 }
       );
     }
 
@@ -35,9 +36,9 @@ export async function PATCH(req: Request, { params }: Params) {
   }
 }
 
-// DELETE /api/reservations/:id
-export async function DELETE(_: Request, { params }: Params) {
-  const id = params.id;
+// DELETE /api/reservations/:id  → 삭제
+export async function DELETE(_req: NextRequest, context: Ctx) {
+  const { id } = await context.params;
   if (!id) {
     return NextResponse.json({ error: 'id required' }, { status: 400 });
   }
