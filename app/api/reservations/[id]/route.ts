@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 type Ctx = { params: Promise<{ id: string }> };
 
-// PATCH: 상태 바꾸기 (승인 / 대기)
+// ✅ 상태 바꾸기 (승인 / 대기)
 export async function PATCH(req: NextRequest, ctx: Ctx) {
   const { id } = await ctx.params;
   if (!id) {
@@ -31,7 +31,7 @@ export async function PATCH(req: NextRequest, ctx: Ctx) {
   return NextResponse.json(data);
 }
 
-// DELETE: 예약 삭제
+// ✅ 삭제
 export async function DELETE(_req: NextRequest, ctx: Ctx) {
   const { id } = await ctx.params;
   if (!id) {

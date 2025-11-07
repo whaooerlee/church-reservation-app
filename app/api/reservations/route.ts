@@ -2,29 +2,25 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url);
-  const status = searchParams.get('status') || 'approved';
-
-  let query = supabaseAdmin
+// ✅ 전체 예약 가져오기
+export async function GET(_req: Request) {
+  const { data, error } = await supabaseAdmin
     .from('reservations')
     .select(
       'id, space_id, title, team_name, start_at, end_at, requester, purpose, status'
     )
     .order('start_at', { ascending: true });
 
-  if (status !== 'all') {
-    query = query.eq('status', status);
-  }
-
-  const { data, error } = await query;
-
   if (error) {
+    // 프론트에서 에러를 볼 수 있게 그대로 보냅니다
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
+
+  // ⬅️ 프론트는 배열을 기대하니까 배열만 보냅니다
   return NextResponse.json(data ?? []);
 }
 
+// ✅ 예약 신청 (사용자 폼)
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -68,6 +64,7 @@ export async function POST(req: Request) {
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
     return NextResponse.json(data, { status: 201 });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
