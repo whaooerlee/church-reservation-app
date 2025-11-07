@@ -2,25 +2,24 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
-// ✅ 전체 예약 가져오기
-export async function GET(_req: Request) {
+// 전체 목록
+export async function GET() {
   const { data, error } = await supabaseAdmin
     .from('reservations')
     .select(
-      'id, space_id, title, team_name, start_at, end_at, requester, purpose, status'
+      // 👇 여기에서 purpose 뺐습니다
+      'id, space_id, title, team_name, start_at, end_at, requester, status'
     )
     .order('start_at', { ascending: true });
 
   if (error) {
-    // 프론트에서 에러를 볼 수 있게 그대로 보냅니다
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  // ⬅️ 프론트는 배열을 기대하니까 배열만 보냅니다
   return NextResponse.json(data ?? []);
 }
 
-// ✅ 예약 신청 (사용자 폼)
+// 신청 저장
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -31,7 +30,7 @@ export async function POST(req: Request) {
       start_at,
       end_at,
       requester,
-      purpose,
+      // purpose 는 DB에 없으니까 받아도 버립니다
     } = body;
 
     if (!space_id || !title || !start_at || !end_at || !requester) {
@@ -54,8 +53,7 @@ export async function POST(req: Request) {
           start_at,
           end_at,
           requester,
-          purpose: purpose ?? null,
-          status: 'pending', // 신청은 대기로
+          status: 'pending', // 기본은 대기
         },
       ])
       .select()
