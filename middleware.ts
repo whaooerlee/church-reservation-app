@@ -1,25 +1,33 @@
-import { NextRequest, NextResponse } from 'next/server';
+// middleware.ts
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+// 이 경로들만 로그인 체크하고 싶을 때
+const ADMIN_PATHS = ['/admin'];
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // /admin 보호 (로그인 페이지와 API 제외)
-  const isAdmin = pathname.startsWith('/admin');
-  const isLoginPage = pathname.startsWith('/admin/login');
-  const isAuthApi = pathname.startsWith('/api/auth');
-
-  if (isAdmin && !isLoginPage && !isAuthApi) {
-    const adminCookie = req.cookies.get('admin')?.value;
-    if (adminCookie !== '1') {
-      const url = req.nextUrl.clone();
-      url.pathname = '/admin/login';
-      url.searchParams.set('redirect', pathname);
-      return NextResponse.redirect(url);
-    }
+  // /admin2 같은 새 페이지는 건드리지 않음
+  if (!ADMIN_PATHS.some((p) => pathname.startsWith(p))) {
+    return NextResponse.next();
   }
+
+  // 쿠키 확인
+  const hasAuth = req.cookies.get('admin_auth')?.value === 'true';
+
+  // 로그인 안 돼 있으면 /admin/login 으로
+  if (!hasAuth && pathname !== '/admin/login') {
+    const url = req.nextUrl.clone();
+    url.pathname = '/admin/login';
+    return NextResponse.redirect(url);
+  }
+
+  // 그 외엔 그냥 통과
   return NextResponse.next();
 }
 
+// 이 미들웨어를 어떤 경로에 적용할지
 export const config = {
-  matcher: ['/admin/:path*', '/api/auth/:path*'],
+  matcher: ['/admin/:path*'],
 };

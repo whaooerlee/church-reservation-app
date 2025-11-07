@@ -1,39 +1,198 @@
 'use client';
 
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import { useEffect, useRef, useState } from 'react';
+import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 
+type Reservation = {
+  id: string;
+  title: string;
+  start_at: string;
+  end_at: string;
+  space_id: string;
+  team_name?: string;
+  status: 'pending' | 'approved';
+};
+
+type Space = { id: string; name: string; color?: string };
+
+function hhmm(d: Date | null) {
+  if (!d) return '';
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
 export default function AdminPage() {
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [spaces, setSpaces] = useState<Space[]>([]);
+  const [monthTitle, setMonthTitle] = useState('');
+  const calendarRef = useRef<any>(null);
+
+  const fetchData = async () => {
+    const { data: resData } = await supabase
+      .from('reservations')
+      .select('id,title,start_at,end_at,space_id,team_name,status')
+      .order('start_at', { ascending: true });
+    const { data: spaceData } = await supabase
+      .from('spaces')
+      .select('id,name,color')
+      .order('name');
+    setReservations((resData as Reservation[]) || []);
+    setSpaces(spaceData || []);
+  };
+
+  useEffect(() => { fetchData(); }, []);
+
+  const approveReservation = async (id: string) => {
+    const { error } = await supabase.from('reservations').update({ status: 'approved' }).eq('id', id);
+    if (error) alert('승인 중 오류 발생');
+    fetchData();
+  };
+  const cancelApproval = async (id: string) => {
+    const { error } = await supabase.from('reservations').update({ status: 'pending' }).eq('id', id);
+    if (error) alert('승인 취소 중 오류 발생');
+    fetchData();
+  };
+  const deleteReservation = async (id: string) => {
+    if (!confirm('정말 이 예약을 삭제하시겠습니까?')) return;
+    const { error } = await supabase.from('reservations').delete().eq('id', id);
+    if (error) alert('삭제 중 오류 발생');
+    fetchData();
+  };
+
+  const nameBySpace = new Map(spaces.map(s => [s.id, s.name]));
+
+  const events = reservations.map(r => ({
+    id: r.id,
+    title: `${r.team_name ? `${r.team_name}` : ''}`,
+    start: r.start_at,
+    end: r.end_at,
+    extendedProps: {
+      status: r.status,
+      spaceName: nameBySpace.get(r.space_id) || '',
+    },
+    classNames: [r.status === 'approved' ? 'evt-approved' : 'evt-pending'],
+  }));
+
+  const eventContent = (info: any) => {
+    const { spaceName, status } = info.event.extendedProps;
+    const start = hhmm(info.event.start);
+    const end = hhmm(info.event.end);
+    const text = `[${spaceName}] ${info.event.title} ${start && end ? `${start}~${end}` : ''}`;
+
+    const wrap = document.createElement('div');
+    wrap.style.display = 'flex';
+    wrap.style.flexDirection = 'column';
+    wrap.style.lineHeight = '1.25';
+    wrap.style.fontSize = '0.75rem';
+    wrap.style.whiteSpace = 'normal';
+    wrap.style.wordBreak = 'keep-all';
+
+    const title = document.createElement('span');
+    title.textContent = text;
+    wrap.appendChild(title);
+
+    const row = document.createElement('div');
+    row.style.marginTop = '3px';
+    row.style.display = 'flex';
+    row.style.gap = '4px';
+
+    const mk = (label: string, color: string, onClick: () => void) => {
+      const b = document.createElement('button');
+      b.textContent = label;
+      b.style.padding = '2px 6px';
+      b.style.fontSize = '0.7rem';
+      b.style.border = `1px solid ${color}`;
+      b.style.borderRadius = '4px';
+      b.style.background = color;
+      b.style.color = '#fff';
+      b.style.cursor = 'pointer';
+      b.onclick = (e) => { e.stopPropagation(); onClick(); };
+      return b;
+    };
+
+    if (status === 'pending') {
+      row.appendChild(mk('승인', '#22a35a', () => approveReservation(info.event.id)));
+      row.appendChild(mk('삭제', '#6b7280', () => deleteReservation(info.event.id)));
+    } else {
+      row.appendChild(mk('승인취소', '#d97706', () => cancelApproval(info.event.id)));
+      row.appendChild(mk('삭제', '#6b7280', () => deleteReservation(info.event.id)));
+    }
+    wrap.appendChild(row);
+    return { domNodes: [wrap] };
+  };
+
+  const gotoPrev = () => {
+    const api = calendarRef.current?.getApi?.();
+    api?.prev();
+    setMonthTitle(api?.view?.title || '');
+  };
+  const gotoNext = () => {
+    const api = calendarRef.current?.getApi?.();
+    api?.next();
+    setMonthTitle(api?.view?.title || '');
+  };
+
   return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: '#f8fafc',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 20,
-      }}
-    >
-      <h1 style={{ fontSize: 24, fontWeight: 700 }}>
-        ✅ 관리자 페이지 접속 성공
-      </h1>
-      <p style={{ fontSize: 16, color: '#334155' }}>
-        이 화면이 보이면 로그인 문제는 “쿠키 체크 로직”에 있습니다.
-      </p>
-      <Link
-        href="/"
-        style={{
-          background: '#a3272f',
-          color: '#fff',
-          padding: '8px 14px',
-          borderRadius: 8,
-          textDecoration: 'none',
-          fontWeight: 500,
-        }}
-      >
-        메인으로 돌아가기
-      </Link>
+    <div style={{ minHeight: '100vh', background: 'var(--brand-bg)', padding: '20px' }}>
+      <header style={{
+        display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end',
+        margin: '0 auto 16px', maxWidth: 1200, flexWrap: 'wrap', gap: 10,
+      }}>
+        <div>
+          <h1 style={{ fontSize: '26px', fontWeight: 600, color: 'var(--brand-navy)', margin: '8px 0 4px' }}>
+            세종교육관 예약관리
+          </h1>
+          <p style={{ color: '#5b6b7c', fontWeight: 400, margin: 0 }}>
+            ✅ 초록: 승인됨 / 🟡 노랑: 승인대기 — 각 항목에서 승인, 취소, 삭제 가능
+          </p>
+        </div>
+        <Link href="/" className="btn btn-primary-outline">← 사용자 화면</Link>
+      </header>
+
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        gap: 12, margin: '0 auto 12px', maxWidth: 1200,
+      }}>
+        <button type="button" className="nav-btn" onClick={gotoPrev}>◀</button>
+        <div className="month-title">{monthTitle || ' '}</div>
+        <button type="button" className="nav-btn" onClick={gotoNext}>▶</button>
+      </div>
+
+      <div className="card" style={{ maxWidth: 1200, margin: '0 auto' }}>
+        <div className="card-bd">
+          <FullCalendar
+            ref={calendarRef}
+            plugins={[dayGridPlugin]}
+            initialView="dayGridMonth"
+            headerToolbar={false}
+            height="auto"
+            events={events}
+            eventContent={eventContent}
+            locale="ko"
+            dayMaxEvents={true}
+            datesSet={(arg) => setMonthTitle(arg.view?.title || '')}
+          />
+        </div>
+      </div>
+
+      <style jsx global>{`
+        :root {
+          --brand-primary: #a3272f;
+          --brand-bg: #f8fafc;
+          --brand-navy: #042550;
+          --brand-line: #e1e5eb;
+        }
+        .fc { font-family: 'Noto Sans KR','Inter',system-ui; font-weight: 400; }
+        .fc .fc-col-header { background: #f5f7fa; border: 1px solid var(--brand-line); }
+        .fc .fc-col-header-cell-cushion { font-weight: 400 !important; color: #334155; padding: 8px 0; }
+        .fc .fc-daygrid-day-number { color: #1e293b; font-weight: 400 !important; }
+        .fc .fc-day-today { background: transparent !important; outline: none !important; }
+        .fc .fc-event { border-radius: 4px; font-size: 0.75rem !important; font-weight: 400 !important; white-space: normal !important; }
+        .fc-event.evt-approved { background-color: #22c55e !important; border-color: #16a34a !important; color: #073b18 !important; }
+        .fc-event.evt-pending { background-color: #fde68a !important; border-color: #f59e0b !important; color: #3b2f07 !important; }
+      `}</style>
     </div>
   );
 }
