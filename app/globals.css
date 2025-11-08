@@ -1,93 +1,148 @@
-/* ===== 관리자/메인 공통 톤 ===== */
-.adm {
-  --adm-navy: #0e2a47;
-  --adm-blue: #1e40af;
-  --adm-blue-100: #eff6ff;
-  --adm-red: #b91c1c;
-  --adm-bg: #f6f8fb;
-  --adm-card: #ffffff;
-  --adm-line: #e5e7eb;
-  --adm-text: #111827;
-
-  /* 이벤트 톤 (연녹색 배지) */
-  --adm-evt-bg: #e6f6ef;
-  --adm-evt-bd: #cceadf;
-  --adm-evt-tx: #0b4a34;
+/* ===== 공통 배경 / 글꼴 ===== */
+body {
+  background: #edf2f6; /* 살짝 파란 회색 */
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #0f172a;
 }
 
-.adm-wrap {
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 28px 20px;
-  background: var(--adm-bg);
+/* ===== 카드 공통 ===== */
+.app-card {
+  background: #fff;
+  border: 1px solid rgba(15, 23, 42, 0.04);
+  border-radius: 20px;
+  box-shadow: 0 10px 35px rgba(15, 23, 42, 0.03);
 }
 
-/* 헤더 */
-.adm-header { margin-bottom: 16px; }
-.adm-badge {
+/* ===== 헤더 영역 (메인 위쪽) ===== */
+.top-header {
+  max-width: 1200px;
+  margin: 0 auto 14px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.badge-small {
   display: inline-block;
-  background: #e0f2fe; color: #0369a1;
-  font-weight: 600; font-size: 12px;
-  padding: 4px 9px; border-radius: 9999px;
+  background: #d8f2ec;
+  color: #06605a;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+/* ===== 버튼 색 통일 ===== */
+.btn-primary {
+  background: #a3272f;
+  border: 1px solid #a3272f;
+  color: #fff !important;
+  border-radius: 10px;
+  padding: 7px 16px;
+  font-weight: 600;
+  transition: transform .05s ease, box-shadow .1s ease;
+}
+.btn-primary:hover {
+  background: #8f2027;
+  box-shadow: 0 10px 20px rgba(163, 39, 47, .18);
+  transform: translateY(-1px);
+}
+.btn-outline {
+  background: #fff;
+  border: 1px solid #a3272f;
+  color: #a3272f !important;
+  border-radius: 10px;
+  padding: 7px 14px;
+  font-weight: 600;
+}
+.btn-outline:hover {
+  background: #a3272f;
+  color: #fff !important;
+}
+
+/* ===== FullCalendar 통일 ===== */
+.fc {
+  font-family: inherit;
+}
+.fc .fc-col-header {
+  background: #f5f7fa;
+}
+.fc .fc-col-header-cell-cushion {
+  padding: 8px 0;
+  font-weight: 500;
+  color: #0f172a;
+}
+.fc .fc-daygrid-day-number {
+  font-weight: 500;
+  color: #0f172a;
+}
+.fc .fc-day-today {
+  background: #fff8eb !important; /* 오늘 살짝 강조 */
+  outline: 2px solid rgba(255, 166, 58, .25);
+}
+.fc .fc-daygrid-day {
+  background: #fff;
+}
+
+/* 이벤트 박스 모양 */
+.fc .fc-event {
+  background: #d9f0e4 !important;   /* 연녹색 */
+  border: 1px solid rgba(6, 96, 90, .16) !important;
+  border-radius: 6px !important;
+  color: #084c42 !important;
+  font-size: 0.78rem !important;
+  line-height: 1.25 !important;
+  white-space: normal !important;
+  padding: 2px 3px !important;
+}
+
+/* 관리자에서 승인됨/대기 색 구분 */
+.fc-event.evt-approved {
+  background: #d9f0e4 !important;
+  border-color: #84cda8 !important;
+}
+.fc-event.evt-pending {
+  background: #ffe7bd !important;
+  border-color: #f6b26b !important;
+  color: #7a4b05 !important;
+}
+
+/* 달력 위 화살표 조정 */
+.nav-btn {
+  border: none;
+  background: none;
+  color: #94a3b8;
+  font-size: 1rem;
+  cursor: pointer;
+}
+.nav-btn:hover {
+  color: #64748b;
+}
+
+/* ===== 신청 폼 ===== */
+.apply-wrapper {
+  max-width: 720px;
+  margin: 0 auto;
+}
+.apply-field {
+  margin-bottom: 14px;
+}
+.apply-label {
+  display: block;
   margin-bottom: 6px;
+  font-weight: 600;
+  color: #1f2937;
 }
-.adm-title {
-  margin: 0; font-size: 26px; font-weight: 800; color: var(--adm-navy);
+.apply-input, .apply-select {
+  width: 100%;
+  border: 1px solid #d2d9e0;
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: #fff;
 }
-.adm-sub { margin: 6px 0 10px; color: #64748b; }
-.adm-links { display: flex; gap: 10px; margin-top: 10px; }
-
-/* 버튼 */
-.adm-btn {
-  display: inline-block; text-decoration: none; font-weight: 700;
-  padding: 8px 16px; border-radius: 10px; transition: .15s;
+.apply-input:focus, .apply-select:focus {
+  outline: none;
+  border-color: #a3272f;
+  box-shadow: 0 0 0 2px rgba(163, 39, 47, .12);
 }
-.adm-btn-primary { background: var(--adm-red); color: #fff; }
-.adm-btn-primary:hover { background: #991b1b; }
-.adm-btn-outline { border: 1px solid var(--adm-blue); color: var(--adm-blue); background: #fff; }
-.adm-btn-outline:hover { background: var(--adm-blue-100); }
-
-/* 카드 */
-.adm-card {
-  background: var(--adm-card);
-  border: 1px solid var(--adm-line);
-  border-radius: 14px;
-  box-shadow: 0 6px 20px rgba(20, 40, 80, 0.06);
-  padding: 12px;
-}
-
-/* 달력 헤더/버튼 */
-.adm .fc .fc-toolbar-title { font-weight: 700; color: var(--adm-navy); }
-.adm .fc .fc-button {
-  background: #fff; color: var(--adm-navy);
-  border: 1px solid var(--adm-line);
-  border-radius: 8px; padding: 2px 8px;
-}
-.adm .fc .fc-button:hover { background: var(--adm-blue-100); }
-
-/* 요일 헤더 */
-.adm .fc .fc-col-header-cell {
-  background: #f7f9fc; border-bottom: 1px solid var(--adm-line);
-  font-weight: 600; color: #374151; padding: 4px 0;
-}
-
-/* 오늘 칸 은은 강조 */
-.adm .fc .fc-day-today { background: #fffdf5 !important; }
-
-/* 이벤트를 ‘배지(블록)’로 보이게 + 줄바꿈 허용 */
-.adm .fc .fc-daygrid-event-harness { max-height: none !important; }
-.adm .fc .fc-daygrid-event {
-  overflow: visible !important;
-  background-color: var(--adm-evt-bg) !important;
-  border: 1px solid var(--adm-evt-bd) !important;
-  color: var(--adm-evt-tx) !important;
-  border-radius: 6px;
-  padding: 2px 6px !important;
-  height: auto !important;
-  line-height: 1.25;
-  font-size: 0.9rem;
-  white-space: normal !important; /* “3-2순 …” 잘림 방지 */
-}
-
-/* FullCalendar 하단 라이선스 문구 숨김(원하면 제거) */
-.fc-license-message { display: none !important; }
