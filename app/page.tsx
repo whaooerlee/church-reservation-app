@@ -61,36 +61,39 @@ export default function HomePage() {
     })();
   }, []);
 
-  const colorBySpace = new Map(
-    spaces.map((s) => [s.id, s.color || '#429f8e'])
-  );
+  const colorBySpace = new Map(spaces.map((s) => [s.id, s.color || '#429f8e']));
   const nameBySpace = new Map(spaces.map((s) => [s.id, s.name]));
 
-  // 무의미한 단어는 조금 덜어냄
-  const cleanTitle = (title: string) =>
-    title.replace(/모임|예배|리허설|회의/gi, '').trim();
-
+  // ✅ events 생성: team_name이 있으면 그걸 우선 표시
   const events = reservations.map((r) => {
     const spaceName = nameBySpace.get(r.space_id) || '';
-    const baseTitle = cleanTitle(r.title);
+    const cleanTitle = r.title.replace(/모임|예배|리허설|회의/gi, '').trim();
+    const displayTitle =
+      r.team_name && r.team_name.trim().length > 0
+        ? r.team_name.trim()
+        : cleanTitle;
+
     return {
       id: r.id,
-      title: baseTitle,
+      title: displayTitle,
       start: r.start_at,
       end: r.end_at,
       backgroundColor: colorBySpace.get(r.space_id) || '#d9f0e4',
       borderColor: colorBySpace.get(r.space_id) || '#d9f0e4',
       extendedProps: {
         spaceName,
-        rawTitle: baseTitle,
+        rawTitle: displayTitle,
       },
     };
   });
 
-  // ▶ 여기서 한 줄로 보이게 함: [411호] 3-2순 15:00~17:00
+  // ✅ 한 줄 표기: [402호] 3-2순 19:10~21:00
   const eventContent = (info: any) => {
     const spaceName = info.event.extendedProps?.spaceName || '';
-    const title = info.event.extendedProps?.rawTitle || info.event.title;
+    const title =
+      info.event.extendedProps?.rawTitle && info.event.extendedProps.rawTitle.trim().length > 0
+        ? info.event.extendedProps.rawTitle
+        : info.event.title;
     const start = hhmm(info.event.start);
     const end = hhmm(info.event.end);
 
@@ -101,11 +104,9 @@ export default function HomePage() {
     wrapper.style.lineHeight = '1.2';
     wrapper.style.fontSize = '0.78rem';
     wrapper.style.whiteSpace = 'normal';
-    wrapper.style.color = '#0f172a'; // 진한 회색 계열
+    wrapper.style.color = '#0f172a';
 
-    const text = `[${spaceName}] ${title}${
-      start && end ? ` ${start}~${end}` : ''
-    }`;
+    const text = `[${spaceName}] ${title}${start && end ? ` ${start}~${end}` : ''}`;
     wrapper.textContent = text;
 
     return { domNodes: [wrapper] };
@@ -124,7 +125,7 @@ export default function HomePage() {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--brand-bg)', padding: '20px' }}>
-      {/* ===== 상단 헤더 (예전 스타일) ===== */}
+      {/* ===== 상단 헤더 (예전 스타일 유지) ===== */}
       <header
         style={{
           display: 'flex',
@@ -163,7 +164,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* ===== 월 표시 + 화살표 (예전 스타일) ===== */}
+      {/* ===== 월 표시 + 화살표 ===== */}
       <div
         style={{
           display: 'flex',
@@ -201,10 +202,10 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* ===== 페이지 안에서 쓰는 스타일 ===== */}
+      {/* ===== 스타일 ===== */}
       <style jsx global>{`
         :root {
-          --brand-primary: #a3272f; /* 버튼 빨강 */
+          --brand-primary: #a3272f;
           --brand-primary-dark: #8f2027;
           --brand-line: #e1e5eb;
           --brand-bg: #f8fafc;
@@ -257,10 +258,8 @@ export default function HomePage() {
           padding: 20px;
         }
 
-        /* 달력 공통 스타일 (예전에 쓰던) */
         .fc {
           font-family: 'Noto Sans KR', 'Inter', system-ui;
-          font-weight: 400;
         }
         .fc .fc-col-header {
           background: #f5f7fa;
@@ -275,21 +274,16 @@ export default function HomePage() {
           color: #1e293b;
           font-weight: 400 !important;
         }
-        /* 오늘: 배경 X, 숫자만 살짝 */
         .fc .fc-day-today {
           background: transparent !important;
-          outline: none !important;
         }
         .fc .fc-day-today .fc-daygrid-day-number {
           color: #0f766e !important;
           font-weight: 600 !important;
         }
-
-        /* 이벤트 박스 */
         .fc .fc-event {
           border-radius: 4px;
           font-size: 0.78rem !important;
-          font-weight: 400 !important;
           line-height: 1.25 !important;
           padding: 2px 3px !important;
           white-space: normal !important;
@@ -297,8 +291,6 @@ export default function HomePage() {
           border: 1px solid rgba(66, 159, 142, 0.35) !important;
           color: #0f172a !important;
         }
-
-        /* 화살표 호버 다시 켜기 */
         .nav-btn {
           border: none;
           background: none;
@@ -311,7 +303,6 @@ export default function HomePage() {
           color: #475569;
           transform: translateY(-1px);
         }
-
         .month-title {
           min-width: 160px;
           text-align: center;
