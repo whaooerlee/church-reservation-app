@@ -216,8 +216,8 @@ export default function HomePage() {
           display: inline-block;
           padding: 4px 10px;
           border-radius: 999px;
-          background: rgba(232, 130, 87, 0.85);
-          color: #eaecefff;
+          background: rgba(249, 116, 0, 1);
+          color: #ffffffff;
           font-size: 0.7rem;
           font-weight: 600;
         }
