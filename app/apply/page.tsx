@@ -215,7 +215,7 @@ export default function ApplyPage() {
             onChange={(e) => setTitle(e.target.value)}
             placeholder="예: 순모임, 찬양팀, 회의..."
             style={{
-              width: '90%',
+              width: '100%',
               border: '1px solid #cbd5e1',
               borderRadius: 10,
               padding: '8px 12px',
@@ -248,7 +248,7 @@ export default function ApplyPage() {
               onChange={(e) => setTeamName(e.target.value)}
               placeholder="예: 3-2순, 찬양팀"
               style={{
-                width: '90%',
+                width: '100%',
                 border: '1px solid #cbd5e1',
                 borderRadius: 10,
                 padding: '8px 12px',
@@ -265,7 +265,7 @@ export default function ApplyPage() {
             value={date}
             onChange={(e) => setDate(e.target.value)}
             style={{
-              width: '90%',
+              width: '100%',
               border: '1px solid #cbd5e1',
               borderRadius: 10,
               padding: '8px 12px',
@@ -298,7 +298,7 @@ export default function ApplyPage() {
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
               style={{
-                width: '90%',
+                width: '100%',
                 border: '1px solid #cbd5e1',
                 borderRadius: 10,
                 padding: '8px 12px',
