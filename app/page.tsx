@@ -138,12 +138,12 @@ export default function HomePage() {
         }}
       >
         <div>
-          <div className="badge">세종교육관</div>
+          <div className="badge">대전온누리교회</div>
           <h1
             style={{
               fontSize: '26px',
               fontWeight: 600,
-              color: 'var(--brand-navy)',
+              color: 'var(--brand-primary-dark)',
               margin: '8px 0 4px',
             }}
           >
