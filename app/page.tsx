@@ -143,7 +143,7 @@ export default function HomePage() {
             style={{
               fontSize: '26px',
               fontWeight: 600,
-              color: 'var(--brand-primary-dark)',
+              color: 'var(--brand-navy)',
               margin: '8px 0 4px',
             }}
           >
@@ -216,7 +216,7 @@ export default function HomePage() {
           display: inline-block;
           padding: 4px 10px;
           border-radius: 999px;
-          background: rgba(4, 37, 80, 0.07);
+          background: rgba(241, 151, 71, 0.07);
           color: #042550;
           font-size: 0.7rem;
           font-weight: 600;
