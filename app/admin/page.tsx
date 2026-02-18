@@ -215,6 +215,7 @@ export default function AdminPage() {
         events={events}
         eventContent={eventContent}
         locale="ko"
+        timeZone="Asia/Seoul"   // ✅ 이거 추가
         dayMaxEvents
         datesSet={(arg) => setMonthTitle(arg.view.title)}
       />

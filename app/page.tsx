@@ -57,7 +57,8 @@ export default function HomePage() {
       try {
         // ✅ 사용자 화면은 승인된 것만 보여야 함
         const [r1, r2] = await Promise.all([
-          fetch('/api/reservations'), // ← status=approved 안 보내도 됨 (API가 기본 approved만 반환)
+          //fetch('/api/reservations'), // ← status=approved 안 보내도 됨 (API가 기본 approved만 반환)
+          fetch('/api/reservations?status=approved'),
           fetch('/api/spaces'),
         ]);
         const data1 = await safeJson(r1);
@@ -181,14 +182,14 @@ export default function HomePage() {
             initialView="dayGridMonth"
             headerToolbar={false}
             height="auto"
-            // ✅ FullCalendar도 서울시간 기준으로
-            timeZone="Asia/Seoul"
             events={events}
             eventContent={eventContent}
             locale="ko"
+            timeZone="Asia/Seoul"   // ✅ 이거 추가
             dayMaxEvents={true}
             datesSet={(arg) => setMonthTitle(arg.view?.title || '')}
           />
+
         </div>
       </div>
 

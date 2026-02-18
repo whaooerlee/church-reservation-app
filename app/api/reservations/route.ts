@@ -3,28 +3,55 @@ import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 export async function GET(req: Request) {
-  try {
-    const url = new URL(req.url);
-    const status = url.searchParams.get('status') || 'approved'; 
-    // status=approved | pending | all
+  const url = new URL(req.url);
+  const status = url.searchParams.get('status') || 'approved'; // ✅ 기본값 approved
 
-    let query = supabaseAdmin
-      .from('reservations')
-      // ✅ 실제 존재하는 컬럼만 안전하게 선택 (여기 중요)
-      .select('id,title,start_at,end_at,space_id,status,requester,team_name')
-      .order('start_at', { ascending: true });
+  let q = supabaseAdmin
+    .from('reservations')
+    .select('id, title, start_at, end_at, space_id, status, requester, team_name')
+    .order('start_at', { ascending: true });
 
-    if (status !== 'all') {
-      query = query.eq('status', status);
-    }
-
-    const { data, error } = await query;
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-    return NextResponse.json(data ?? []);
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'server error' }, { status: 500 });
+  if (status === 'approved' || status === 'pending') {
+    q = q.eq('status', status);
   }
+
+  const { data, error } = await q;
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(data || []);
+}
+
+export async function POST(req: Request) {
+  let body: any = {};
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'invalid json' }, { status: 400 });
+  }
+
+  const { space_id, title, start_at, end_at, requester, team_name } = body || {};
+  if (!space_id || !title || !start_at || !end_at || !requester) {
+    return NextResponse.json(
+      { error: '필수 항목 누락 (space_id, title, start_at, end_at, requester)' },
+      { status: 400 }
+    );
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('reservations')
+    .insert([
+      {
+        space_id,
+        title,
+        start_at,
+        end_at,
+        requester,
+        team_name: team_name || null,
+        status: 'pending', // ✅ 신청은 무조건 pending
+      },
+    ])
+    .select('id, title, start_at, end_at, space_id, status, requester, team_name')
+    .single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true, data });
 }
