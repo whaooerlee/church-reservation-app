@@ -18,6 +18,17 @@ type Reservation = {
 
 type Space = { id: string; name: string; color?: string };
 
+function normalizeTeamLabel(raw?: string) {
+  const t = (raw || '').trim();
+  if (!t) return '';
+  return t.endsWith('순') ? t : `${t}순`;
+}
+
+function stripDuplicateSun(text: string) {
+  // "3-2순 순" 같은 케이스 정리
+  return text.replace(/(순)\s*\1/g, '$1').trim();
+}
+
 async function safeJson(res: Response) {
   const text = await res.text();
   if (!res.ok) throw new Error(text || `HTTP ${res.status}`);
@@ -106,10 +117,15 @@ export default function HomePage() {
     wrapper.style.textOverflow = 'ellipsis';
     wrapper.style.color = '#0f172a';
 
+    /*
     const text =
       `[${spaceName}] ${title}` +
       (requester ? ` (${requester})` : '') +
       (start && end ? ` ${start}~${end}` : '');
+*/
+    const text = stripDuplicateSun(
+      `[${spaceName}] ${info.event.title} ${start && end ? `${start}~${end}` : ''}`
+    );
 
     wrapper.textContent = text;
     return { domNodes: [wrapper] };
