@@ -1,11 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
-type Ctx = { params: { id: string } };
+type Ctx = { params: Promise<{ id: string }> };
 
-export async function PATCH(req: Request, { params }: Ctx) {
+export async function PATCH(req: NextRequest, ctx: Ctx) {
   try {
-    const id = params?.id;
+    const { id } = await ctx.params;
     if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
 
     const bodyText = await req.text();
@@ -13,7 +13,10 @@ export async function PATCH(req: Request, { params }: Ctx) {
     const status = body?.status;
 
     if (status !== 'approved' && status !== 'pending') {
-      return NextResponse.json({ error: 'status must be approved|pending' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'status must be approved|pending' },
+        { status: 400 }
+      );
     }
 
     const { data, error } = await supabaseAdmin
@@ -31,9 +34,9 @@ export async function PATCH(req: Request, { params }: Ctx) {
   }
 }
 
-export async function DELETE(_: Request, { params }: Ctx) {
+export async function DELETE(_: NextRequest, ctx: Ctx) {
   try {
-    const id = params?.id;
+    const { id } = await ctx.params;
     if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
 
     const { error } = await supabaseAdmin.from('reservations').delete().eq('id', id);
